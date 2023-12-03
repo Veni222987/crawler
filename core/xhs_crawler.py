@@ -38,7 +38,7 @@ class XHSCrawler:
             'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
 
         self.driver = Chrome(options=chrome_options)
-        with open('./p.js') as f:
+        with open('../resource/p.js') as f:
             js = f.read()
 
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -105,7 +105,7 @@ class XHSCrawler:
         return res_list
 
     def save_data(self, data: list):
-        with open("./" + self.keyword + ".json", "w", encoding="utf-8") as f:
+        with open("../output/" + self.keyword + ".json", "w", encoding="utf-8") as f:
             f.truncate()
             json.dump(data, f, ensure_ascii=False)
 
