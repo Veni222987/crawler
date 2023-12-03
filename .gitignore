@@ -1,0 +1,8 @@
+# IDE
+.idea
+
+# exe
+*.exe
+
+# cookies
+*_cookies.json
