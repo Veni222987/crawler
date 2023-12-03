@@ -2,7 +2,7 @@ import json
 import os.path
 from time import sleep
 
-from selenium.webdriver import Chrome
+from selenium.webdriver import Chrome, ActionChains
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -12,6 +12,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 class XHSCrawler:
+    cookies_path = "cookies/xhs_crawler_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
     url: str
@@ -22,7 +23,10 @@ class XHSCrawler:
         "title": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/a/span',
         "like_count": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/div/span/span[2]',
         "author": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/div/a/span',
-        "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]'
+        "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]',
+        "hottest": '/html/body/div[4]/div/li[3]',
+        "dropdown_container": '//*[@id="global"]/div[2]/div[2]/div/div[1]/div[2]/div',
+        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]'
     }
 
     def __init__(self, url: str, keyword: str):
@@ -33,12 +37,12 @@ class XHSCrawler:
     # 初始化driver 和 wait
     def _init_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         chrome_options.add_argument(
             'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
 
         self.driver = Chrome(options=chrome_options)
-        with open('./p.js') as f:
+        with open('core/p.js') as f:
             js = f.read()
 
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -52,7 +56,7 @@ class XHSCrawler:
         while 1:
             cookies = self.driver.get_cookies()
             print(cookies)
-            with open("./xhs_crawler_cookies.json", "w") as f:
+            with open(self.cookies_path, "w") as f:
                 f.truncate()
                 json.dump(cookies, f)
 
@@ -61,58 +65,95 @@ class XHSCrawler:
         self.driver.get(self.url)
         sleep(3)
         # 获取cookies，此处实现为本地获取，也可实现为redis获取
-        if os.path.exists("./xhs_crawler_cookies.json"):
-            with open("./xhs_crawler_cookies.json", "r") as f:
+        if os.path.exists(self.cookies_path):
+            with open(self.cookies_path, "r") as f:
                 cookies = json.load(f)
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
         self.driver.refresh()
         print(self.driver.get_cookies())
         sleep(3)
+        with open(self.cookies_path, "w") as f:
+            f.truncate()
+            json.dump(self.driver.get_cookies(), f)
 
-    def get_page_info(self) -> list:
-        res_list = []
-
+    def get_page_info(self) -> dict:
+        res_dict = {}
         try:
             self.wait.until(EC.presence_of_element_located((By.XPATH, self.elements["search_input"])))
             search_input = self.driver.find_element(By.XPATH, self.elements["search_input"])
             search_input.send_keys(self.keyword)
             search_input.send_keys(Keys.ENTER)
             sleep(5)
-            notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
-            notes = notes_div.find_elements(By.XPATH, "./section")
+            actions = ActionChains(self.driver)
+            actions.move_to_element(self.driver.find_element(By.XPATH, self.elements["dropdown_container"])).perform()
+            sleep(1)
+            hottest = self.driver.find_element(By.XPATH, self.elements["hottest"])
+            hottest.click()
             sleep(5)
-            for note in notes:
+            subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
+                                                                                                     "./button")
+            for subtitle in subtitles:
+                subtitle_notes = {}
                 try:
-                    title = note.find_element(By.XPATH, "./div/div/a/span").text
-                    like_count = note.find_element(By.XPATH, "./div/div/div/span/span[2]").text
-                    author = note.find_element(By.XPATH, "./div/div/div/a/span").text
-                    url = note.find_element(By.XPATH, "./div/a[1]").get_attribute("href")
-                    res_list.append({
-                        "title": title,
-                        "like_count": like_count,
-                        "author": author,
-                        "url": url
-                    })
-                    print(title, like_count, author, url)
+                    subtitle.click()
+                    sleep(5)
+                    notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
+                    continue_flag = True
+                    while continue_flag:
+                        # 模拟滚轮向下
+                        self.driver.execute_script(f"window.scrollBy(0, 300);")
+                        sleep(3)
+                        notes = notes_div.find_elements(By.XPATH, "./section")
+                        for note in notes:
+                            try:
+                                title = note.find_element(By.XPATH, "./div/div/a/span").text
+                                like_count = note.find_element(By.XPATH, "./div/div/div/span/span[2]").text
+                                author = note.find_element(By.XPATH, "./div/div/div/a/span").text
+                                url = note.find_element(By.XPATH, "./div/a[1]").get_attribute("href")
+                                note_id = url.split("/")[-1]
+                                if int(like_count) > 30:
+                                    temp_note = {
+                                        "title": title,
+                                        "like_count": like_count,
+                                        "author": author,
+                                        "url": url,
+                                        "subtitle": subtitle.text,
+                                    }
+                                    # 如果笔记存在全局字典中，拼接subtitle
+                                    if note_id in res_dict and res_dict[note_id]["subtitle"].split(',')[-1] != \
+                                            temp_note[
+                                                "subtitle"]:
+                                        temp_note["subtitle"] = res_dict[note_id]["subtitle"] + "," + temp_note[
+                                            "subtitle"]
+                                    res_dict[note_id] = temp_note
+                                    subtitle_notes[note_id] = temp_note
+                                    print(temp_note)
+                                else:
+                                    continue_flag = False
+                            except Exception as e:
+                                print(e)
+                                continue
                 except Exception as e:
                     print(e)
                     continue
+                # 保存文件
+                self.save_data(subtitle_notes, self.keyword + "-" + subtitle.text)
         except Exception as e:
             print(e)
-            return res_list
+            return res_dict
 
-        return res_list
+        return res_dict
 
-    def save_data(self, data: list):
-        with open("./" + self.keyword + ".json", "w", encoding="utf-8") as f:
+    def save_data(self, data: dict, filename: str):
+        with open("data/" + filename + ".json", "w", encoding="utf-8") as f:
             f.truncate()
             json.dump(data, f, ensure_ascii=False)
 
 
 if __name__ == '__main__':
-    xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "深圳")
+    xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "封开")
     # xhs_crawler.save_cookies_manually()
     xhs_crawler.do_login()
     temp = xhs_crawler.get_page_info()
-    xhs_crawler.save_data(temp)
+    xhs_crawler.save_data(temp, xhs_crawler.keyword)
