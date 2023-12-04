@@ -12,7 +12,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from core.resource import magic
 
+
 class XHSCrawler:
+    cookies_path = "./cookies/xhs_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
     url: str
@@ -54,8 +56,8 @@ class XHSCrawler:
 
     def save_cookies_manually(self):
         self.driver.get(self.url)
-        if not os.path.exists("../cookies"):
-            os.makedirs("../cookies")
+        if not os.path.exists("./cookies"):
+            os.makedirs("./cookies")
         while 1:
             cookies = self.driver.get_cookies()
             print(cookies)
@@ -154,9 +156,9 @@ class XHSCrawler:
 
     def save_data(self, data: dict, file_name: str):
         try:
-            if not os.path.exists("../output"):
-                os.makedirs("../output")
-            with open("../output/" + file_name + ".json", "w", encoding="utf-8") as f:
+            if not os.path.exists("./output"):
+                os.makedirs("./output")
+            with open("./output/" + file_name + ".json", "w", encoding="utf-8") as f:
                 f.truncate()
                 json.dump(data, f, ensure_ascii=False)
         except Exception as e:
