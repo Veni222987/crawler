@@ -1,8 +1,10 @@
 async-timeout==4.0.3
 certifi==2023.11.17
-charset-normalizer==3.3.2
 idna==3.6
 redis==5.0.1
 requests==2.31.0
 schedule-sdk==1.0.0
 urllib3==2.1.0
+
+selenium~=4.15.2
+flask~=3.0.0

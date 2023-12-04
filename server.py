@@ -20,7 +20,7 @@ def search_brand():
     data = request.json
     keyword = data["keyword"]
     ctx_str = json.dumps(XHSWorkerContext(type="search", keyword=keyword).__dict__)
-    client.submit_task(Task(task_type="test", context=ctx_str))
+    client.submit_task(Task(task_type="search", context=ctx_str))
     return {"code": 0, "msg": "success", "data": None}
 
 
@@ -54,6 +54,8 @@ def get_search_result():
 
 
 if __name__ == '__main__':
+    threading.Thread(target=app.run).start()
+
     # 任务管理server
     client = TaskRpcClient("http://8.138.58.80:8081")
 
@@ -67,6 +69,4 @@ if __name__ == '__main__':
     # 注册任务分发器的任务worker（任务类型 -> 任务worker）
     dispatcher.register_task_worker({"search": XHSWorker(max_running_task_num=5)})
 
-    t = threading.Thread(target=app.run)
-    t.start()
     dispatcher.work()

@@ -10,9 +10,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from core.resource import magic
 
 class XHSCrawler:
-    cookies_path = "../cookies/xhs_crawler_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
     url: str
@@ -37,16 +37,17 @@ class XHSCrawler:
     # 初始化driver 和 wait
     def _init_driver(self):
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument(
             'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
 
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         self.driver = Chrome(options=chrome_options)
-        with open('../resource/p.js') as f:
-            js = f.read()
 
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": js
+            "source": magic
         })
 
         self.wait = WebDriverWait(self.driver, 30)
