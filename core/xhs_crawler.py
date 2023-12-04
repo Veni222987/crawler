@@ -12,7 +12,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 class XHSCrawler:
-    cookies_path = "cookies/xhs_crawler_cookies.json"
+    cookies_path = "../cookies/xhs_crawler_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
     url: str
@@ -42,7 +42,7 @@ class XHSCrawler:
             'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
 
         self.driver = Chrome(options=chrome_options)
-        with open('core/p.js') as f:
+        with open('../resource/p.js') as f:
             js = f.read()
 
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -53,8 +53,8 @@ class XHSCrawler:
 
     def save_cookies_manually(self):
         self.driver.get(self.url)
-        if not os.path.exists("cookies"):
-            os.makedirs("cookies")
+        if not os.path.exists("../cookies"):
+            os.makedirs("../cookies")
         while 1:
             cookies = self.driver.get_cookies()
             print(cookies)
@@ -135,25 +135,32 @@ class XHSCrawler:
                                 else:
                                     continue_flag = False
                             except Exception as e:
+                                print("爬取单篇笔记失败")
                                 print(e)
                                 continue
                 except Exception as e:
+                    print("爬取单个subtitle失败")
                     print(e)
                     continue
                 # 保存文件
                 self.save_data(subtitle_notes, self.keyword + "-" + subtitle.text)
         except Exception as e:
+            print("获取关键词信息失败")
             print(e)
             return res_dict
 
         return res_dict
 
-    def save_data(self, data: dict, filename: str):
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        with open("data/" + filename + ".json", "w", encoding="utf-8") as f:
-            f.truncate()
-            json.dump(data, f, ensure_ascii=False)
+    def save_data(self, data: dict, file_name: str):
+        try:
+            if not os.path.exists("../output"):
+                os.makedirs("../output")
+            with open("../output/" + file_name + ".json", "w", encoding="utf-8") as f:
+                f.truncate()
+                json.dump(data, f, ensure_ascii=False)
+        except Exception as e:
+            print("保存文件失败")
+            print(e)
 
 
 if __name__ == '__main__':
