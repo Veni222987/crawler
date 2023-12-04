@@ -53,9 +53,12 @@ class XHSCrawler:
 
     def save_cookies_manually(self):
         self.driver.get(self.url)
+        if not os.path.exists("cookies"):
+            os.makedirs("cookies")
         while 1:
             cookies = self.driver.get_cookies()
             print(cookies)
+            # 目录不存在则创建
             with open(self.cookies_path, "w") as f:
                 f.truncate()
                 json.dump(cookies, f)
@@ -146,6 +149,8 @@ class XHSCrawler:
         return res_dict
 
     def save_data(self, data: dict, filename: str):
+        if not os.path.exists("data"):
+            os.makedirs("data")
         with open("data/" + filename + ".json", "w", encoding="utf-8") as f:
             f.truncate()
             json.dump(data, f, ensure_ascii=False)
