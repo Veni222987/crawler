@@ -10,8 +10,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from core.resource import magic
-
 
 class XHSCrawler:
     cookies_path = "./cookies/xhs_cookies.json"
@@ -39,17 +37,19 @@ class XHSCrawler:
     # 初始化driver 和 wait
     def _init_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument(
-            'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
-
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_argument("--headless")
+        # chrome_options.add_argument(
+        #     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
+        #
+        # chrome_options.add_argument('--no-sandbox')
+        # chrome_options.add_argument('--disable-gpu')
+        # chrome_options.add_argument('--disable-dev-shm-usage')
         self.driver = Chrome(options=chrome_options)
 
+        # 注入js
+        magic_js = open("./resource/p.js", "r").read()
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": magic
+            "source": magic_js
         })
 
         self.wait = WebDriverWait(self.driver, 30)
