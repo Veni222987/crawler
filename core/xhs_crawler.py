@@ -139,12 +139,10 @@ class XHSCrawler:
                                         temp_note["subtitle"] = res_dict[note_id]["subtitle"] + "," + temp_note[
                                             "subtitle"]
                                     res_dict[note_id] = temp_note
-                                    print(temp_note)
                                 else:
                                     continue_flag = False
                             except Exception as e:
-                                print("爬取单篇笔记失败")
-                                print(e)
+                                print("爬取单篇笔记失败", e.args)
                                 continue
                 except Exception as e:
                     print("爬取单个subtitle失败")

@@ -53,8 +53,12 @@ def get_search_result():
     return {"code": -1, "msg": "任务未完成"}
 
 
+def start():
+    app.run(port=5000, host="0.0.0.0")
+
+
 if __name__ == '__main__':
-    threading.Thread(target=app.run).start()
+    threading.Thread(target=start).start()
 
     # 任务管理server
     client = TaskRpcClient("http://8.138.58.80:8081")
