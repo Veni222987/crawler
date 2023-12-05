@@ -100,7 +100,6 @@ class XHSCrawler:
             subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
                                                                                                      "./button")
             for subtitle in subtitles:
-                subtitle_notes = {}
                 try:
                     subtitle.click()
                     sleep(5)
@@ -133,7 +132,6 @@ class XHSCrawler:
                                         temp_note["subtitle"] = res_dict[note_id]["subtitle"] + "," + temp_note[
                                             "subtitle"]
                                     res_dict[note_id] = temp_note
-                                    subtitle_notes[note_id] = temp_note
                                     print(temp_note)
                                 else:
                                     continue_flag = False
@@ -145,8 +143,6 @@ class XHSCrawler:
                     print("爬取单个subtitle失败")
                     print(e)
                     continue
-                # 保存文件
-                self.save_data(subtitle_notes, self.keyword + "-" + subtitle.text)
         except Exception as e:
             print("获取关键词信息失败")
             print(e)
