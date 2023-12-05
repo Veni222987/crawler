@@ -29,21 +29,24 @@ class XHSCrawler:
         "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]'
     }
 
-    def __init__(self, url: str, keyword: str):
+    def __init__(self, url: str, keyword: str, headless: bool = True):
         self.url = url
         self.keyword = keyword
-        self._init_driver()
+        self._init_driver(headless)
+        print('[Driver] init success')
 
     # 初始化driver 和 wait
-    def _init_driver(self):
+    def _init_driver(self, headless: bool = True):
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
-        # chrome_options.add_argument(
-        #     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
-        #
-        # chrome_options.add_argument('--no-sandbox')
-        # chrome_options.add_argument('--disable-gpu')
-        # chrome_options.add_argument('--disable-dev-shm-usage')
+        if headless:
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument(
+                'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
+
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+
         self.driver = Chrome(options=chrome_options)
 
         # 注入js
@@ -77,7 +80,7 @@ class XHSCrawler:
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
         self.driver.refresh()
-        print(self.driver.get_cookies())
+        print("[Refresh Cookie]", self.driver.get_cookies())
         sleep(3)
         with open(self.cookies_path, "w") as f:
             f.truncate()
@@ -90,23 +93,27 @@ class XHSCrawler:
             search_input = self.driver.find_element(By.XPATH, self.elements["search_input"])
             search_input.send_keys(self.keyword)
             search_input.send_keys(Keys.ENTER)
+            print('[After Search Input] wait for 5s')
             sleep(5)
             actions = ActionChains(self.driver)
             actions.move_to_element(self.driver.find_element(By.XPATH, self.elements["dropdown_container"])).perform()
             sleep(1)
             hottest = self.driver.find_element(By.XPATH, self.elements["hottest"])
             hottest.click()
+            print('[After Click Hot order] wait for 5s')
             sleep(5)
             subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
                                                                                                      "./button")
             for subtitle in subtitles:
                 try:
                     subtitle.click()
+                    print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
                     sleep(5)
                     notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
                     continue_flag = True
                     while continue_flag:
                         # 模拟滚轮向下
+                        print(f'[Scroll Down] notes count: {len(res_dict)}')
                         self.driver.execute_script(f"window.scrollBy(0, 300);")
                         sleep(3)
                         notes = notes_div.find_elements(By.XPATH, "./section")
@@ -150,11 +157,11 @@ class XHSCrawler:
 
         return res_dict
 
-    def save_data(self, data: dict, file_name: str):
+    def save_data(self, data: dict, keyword: str):
         try:
             if not os.path.exists("./output"):
                 os.makedirs("./output")
-            with open("./output/" + file_name + ".json", "w", encoding="utf-8") as f:
+            with open("./output/" + keyword + ".json", "w", encoding="utf-8") as f:
                 f.truncate()
                 json.dump(data, f, ensure_ascii=False)
         except Exception as e:

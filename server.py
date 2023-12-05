@@ -67,6 +67,6 @@ if __name__ == '__main__':
                                 redis_port=6378, db=3, redis_pass="dsfkjojo432rn5")
 
     # 注册任务分发器的任务worker（任务类型 -> 任务worker）
-    dispatcher.register_task_worker({"search": XHSWorker(max_running_task_num=5)})
+    dispatcher.register_task_worker({"search": XHSWorker(max_running_task_num=5, headless=True)})
 
     dispatcher.work()
