@@ -19,8 +19,8 @@ client: TaskRpcClient = None
 def search_brand():
     data = request.json
     keyword = data["keyword"]
-    ctx_str = json.dumps(XHSWorkerContext(type="search", keyword=keyword).__dict__)
-    client.submit_task(Task(task_type="search", context=ctx_str))
+    ctx_str = json.dumps(XHSWorkerContext(type="search_xhs", keyword=keyword).__dict__)
+    client.submit_task(Task(task_type="search_xhs", context=ctx_str))
     return {"code": 0, "msg": "success", "data": None}
 
 
@@ -41,6 +41,7 @@ def get_search_result():
     # 判断./output/keyword.json是否存在，若存在则返回，否则返回空
     json_result = check_and_return_json("./output/" + keyword + ".json")
     if json_result:
+        json_result = list(json_result.values())
         # 使用 StringIO 作为文件对象
         si = io.StringIO()
         cw = csv.DictWriter(si, fieldnames=json_result[0].keys())
@@ -65,6 +66,8 @@ if __name__ == '__main__':
                                 redis_port=6378, db=3, redis_pass="dsfkjojo432rn5")
 
     # 注册任务分发器的任务worker（任务类型 -> 任务worker）
-    dispatcher.register_task_worker({"search": XHSWorker(max_running_task_num=5, headless=True)})
+    dispatcher.register_task_worker({"search_xhs": XHSWorker(max_running_task_num=5, headless=True)})
     threading.Thread(target=dispatcher.work).start()
+
+    app.json.ensure_ascii = False
     app.run(port=5001, host="0.0.0.0")

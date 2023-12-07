@@ -1,7 +1,9 @@
 import json
 import os.path
+import time
 from time import sleep
 
+from selenium.common import NoSuchElementException
 from selenium.webdriver import Chrome, ActionChains
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome import webdriver
@@ -10,13 +12,21 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from core.base_crawler import BaseCrawler
+from core.cookie_pool import CookiePool
 
-class XHSCrawler:
+
+class XHSCrawler(BaseCrawler):
+    cookie_pool: CookiePool
     cookies_path = "./cookies/xhs_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
+
+    website = "xhs"
+
     url: str
     keyword: str
+
     elements = {
         "search_input": '//*[@id="global"]/div[1]/header/div[2]/input',
         "notes_div": '//*[@id="global"]/div[2]/div[2]/div/div[4]',
@@ -26,65 +36,66 @@ class XHSCrawler:
         "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]',
         "hottest": '/html/body/div[4]/div/li[3]',
         "dropdown_container": '//*[@id="global"]/div[2]/div[2]/div/div[1]/div[2]/div',
-        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]'
+        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]',
+        "qrcode": '//*[@id="qrcode"]/img',
+        "login_btn": '//*[@id="login-btn"]/span',
+        "user_profile": '//*[@id="global"]/div[2]/div[1]/ul/li[4]/div/a'
     }
 
     def __init__(self, url: str, keyword: str, headless: bool = True):
+        super().__init__(headless)
         self.url = url
         self.keyword = keyword
-        self._init_driver(headless)
         print('[Driver] init success')
 
-    # 初始化driver 和 wait
-    def _init_driver(self, headless: bool = True):
-        chrome_options = Options()
-        if headless:
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument(
-                'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
-
-            chrome_options.add_argument('--no-sandbox')
-            chrome_options.add_argument('--disable-gpu')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-
-        self.driver = Chrome(options=chrome_options)
-
-        # 注入js
-        magic_js = open("./resource/p.js", "r").read()
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": magic_js
-        })
-
-        self.wait = WebDriverWait(self.driver, 30)
-
-    def save_cookies_manually(self):
+    def obtain_cookie(self):
+        temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
-        if not os.path.exists("./cookies"):
-            os.makedirs("./cookies")
-        while 1:
+
+        try:
+            self.driver.find_element(By.XPATH, self.elements["qrcode"])
+        except NoSuchElementException as e:
+            # 尚未登录
+            print("开始自旋等待登录")
+            while True:
+                try:
+                    login_btn = self.driver.find_element(By.XPATH, self.elements["login_btn"])
+                    time.sleep(1)
+                    print("未登录成功")
+                except NoSuchElementException as e:  # 直到登录按钮消失
+                    break
+            print("检测到登录成功")
             cookies = self.driver.get_cookies()
-            print(cookies)
-            # 目录不存在则创建
-            with open(self.cookies_path, "w") as f:
-                f.truncate()
-                json.dump(cookies, f)
+            try:
+                user_ele = self.driver.find_element(By.XPATH, self.elements["user_profile"])
+                user_id = user_ele.get_property("href").split("/")[-1]
+            except Exception as e:
+                ns = time.time_ns()
+                print("获取user_id失败，随机生成：", ns)
+                user_id = str(ns)
+            self.cookie_pool.save_cookie(self.website, user_id, cookies)
 
     def do_login(self):
         temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
-        sleep(3)
-        # 获取cookies，此处实现为本地获取，也可实现为redis获取
-        if os.path.exists(self.cookies_path):
-            with open(self.cookies_path, "r") as f:
-                cookies = json.load(f)
-            for cookie in cookies:
-                self.driver.add_cookie(cookie)
-        self.driver.refresh()
-        print("[Refresh Cookie]", self.driver.get_cookies())
-        sleep(3)
-        with open(self.cookies_path, "w") as f:
-            f.truncate()
-            json.dump(self.driver.get_cookies(), f)
+        while True:
+            cookies = self.cookie_pool.get_rand_cookie(self.website)
+            if len(cookies) == 0:
+                print("cookie池为空，等待获取")  # TODO 短信/邮件通知
+                sleep(3)
+                continue
+
+        print("[Use Cookie]", cookies)
+        for cookie in cookies:
+            self.driver.add_cookie(cookie)
+
+        # 尝试访问
+        self.driver.get(temp_url)
+        try:
+            self.driver.find_element(By.XPATH, self.elements["qrcode"])
+            raise Exception("账号登录失败")
+        except NoSuchElementException as e:
+            print("成功登录")
 
     def get_page_info(self) -> dict:
         res_dict = {}
@@ -167,9 +178,9 @@ class XHSCrawler:
             print(e)
 
 
-if __name__ == '__main__':
-    xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "封开")
-    # xhs_crawler.save_cookies_manually()
-    xhs_crawler.do_login()
-    temp = xhs_crawler.get_page_info()
-    xhs_crawler.save_data(temp, xhs_crawler.keyword)
+# if __name__ == '__main__':
+#     xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "封开")
+#     # xhs_crawler.save_cookies_manually()
+#     xhs_crawler.do_login()
+#     temp = xhs_crawler.get_page_info()
+#     xhs_crawler.save_data(temp, xhs_crawler.keyword)
