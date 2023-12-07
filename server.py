@@ -19,7 +19,8 @@ client: TaskRpcClient = None
 def search_brand():
     data = request.json
     keyword = data["keyword"]
-    ctx_str = json.dumps(XHSWorkerContext(type="search_xhs", keyword=keyword).__dict__)
+    ctx_str = json.dumps(XHSWorkerContext(type="search_xhs",
+                                          keyword=keyword).__dict__)
     client.submit_task(Task(task_type="search_xhs", context=ctx_str))
     return {"code": 0, "msg": "success", "data": None}
 

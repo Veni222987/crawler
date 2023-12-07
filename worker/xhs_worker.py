@@ -4,6 +4,7 @@ from typing import Type
 from async_schedule.op import TaskOperator
 from async_schedule.worker import AbstractWorker
 
+from core.cookie_pool import CookiePool
 from core.xhs_crawler import XHSCrawler
 
 
@@ -19,7 +20,9 @@ class XHSWorker(AbstractWorker[XHSWorkerContext]):
         self.headless = headless
 
     def work(self, op: TaskOperator, task_context: XHSWorkerContext):
-        xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", task_context.keyword, self.headless)
+        xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", task_context.keyword,
+                                 pool= CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
+                                 headless=self.headless)
         xhs_crawler.do_login()
         data = xhs_crawler.get_page_info()
         xhs_crawler.save_data(data, task_context.keyword)

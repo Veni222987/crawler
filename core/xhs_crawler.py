@@ -42,10 +42,11 @@ class XHSCrawler(BaseCrawler):
         "user_profile": '//*[@id="global"]/div[2]/div[1]/ul/li[4]/div/a'
     }
 
-    def __init__(self, url: str, keyword: str, headless: bool = True):
+    def __init__(self, url: str, keyword: str, pool: CookiePool, headless: bool = True):
         super().__init__(headless)
         self.url = url
         self.keyword = keyword
+        self.cookie_pool = pool
         print('[Driver] init success')
 
     def obtain_cookie(self):
@@ -84,6 +85,8 @@ class XHSCrawler(BaseCrawler):
                 print("cookie池为空，等待获取")  # TODO 短信/邮件通知
                 sleep(3)
                 continue
+            else:
+                break
 
         print("[Use Cookie]", cookies)
         for cookie in cookies:
@@ -113,7 +116,8 @@ class XHSCrawler(BaseCrawler):
             hottest.click()
             print('[After Click Hot order] wait for 5s')
             sleep(5)
-            subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
+
+            subtitles = self.driver.find_element(By.XPAfTH, self.elements["subtitles"]).find_elements(By.XPATH,
                                                                                                      "./button")
             for subtitle in subtitles:
                 try:
