@@ -117,7 +117,7 @@ class XHSCrawler(BaseCrawler):
             print('[After Click Hot order] wait for 5s')
             sleep(5)
 
-            subtitles = self.driver.find_element(By.XPAfTH, self.elements["subtitles"]).find_elements(By.XPATH,
+            subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
                                                                                                      "./button")
             for subtitle in subtitles:
                 try:
@@ -180,7 +180,6 @@ class XHSCrawler(BaseCrawler):
         except Exception as e:
             print("保存文件失败")
             print(e)
-
 
 # if __name__ == '__main__':
 #     xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "封开")
