@@ -12,10 +12,10 @@ class BaseCrawler:
 
     def _init_driver(self, headless: bool = True):
         chrome_options = Options()
+        chrome_options.add_argument(
+            'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
         if headless:
             chrome_options.add_argument("--headless")
-            chrome_options.add_argument(
-                'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36')
 
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-gpu')

@@ -7,7 +7,6 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver import Chrome, ActionChains
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
