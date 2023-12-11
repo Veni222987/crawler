@@ -48,6 +48,14 @@ class XHSCrawler(BaseCrawler):
         self.cookie_pool = pool
         print('[Driver] init success')
 
+    def check_login(self):
+        self.driver.get(self.url)
+        try:
+            self.driver.find_element(By.XPATH, self.elements["qrcode"])
+            return False
+        except NoSuchElementException as e:
+            return True
+
     def obtain_cookie(self):
         temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
