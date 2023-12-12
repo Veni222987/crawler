@@ -57,7 +57,7 @@ def get_search_result():
 
 if __name__ == '__main__':
     # 任务管理server
-    client = TaskRpcClient("http://8.138.58.80:8081")
+    client = TaskRpcClient("https://async-scheduler.bv5a7f4ddoqnm.ap-southeast-1.cs.amazonlightsail.com")
 
     # 提交任务，一般在前端使用，这里仅作测试（context传入TestWorkerContext结构序列化后的JSON字符串）
     # task_client.submit_task(Task(task_type="test", context=ctx_str))

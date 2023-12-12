@@ -35,7 +35,8 @@ class XHSCrawler(BaseCrawler):
         "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]',
         "hottest": '/html/body/div[4]/div/li[3]',
         "dropdown_container": '//*[@id="global"]/div[2]/div[2]/div/div[1]/div[2]/div',
-        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]',
+        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]',
+        # //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]
         "qrcode": '//*[@id="qrcode"]/img',
         "login_btn": '//*[@id="login-btn"]/span',
         "user_profile": '//*[@id="global"]/div[2]/div[1]/ul/li[4]/div/a'
@@ -173,6 +174,7 @@ class XHSCrawler(BaseCrawler):
         except Exception as e:
             print("获取关键词信息失败")
             print(e)
+            self.driver.save_screenshot("./获取关键词信息.png")
             return res_dict
 
         return res_dict

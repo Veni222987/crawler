@@ -20,8 +20,9 @@ class XHSWorker(AbstractWorker[XHSWorkerContext]):
         self.headless = headless
 
     def work(self, op: TaskOperator, task_context: XHSWorkerContext):
+        print("开始执行爬虫任务")
         xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", task_context.keyword,
-                                 pool= CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
+                                 pool=CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
                                  headless=self.headless)
         xhs_crawler.do_login()
         data = xhs_crawler.get_page_info()
