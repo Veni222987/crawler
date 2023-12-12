@@ -3,8 +3,9 @@ import os.path
 import time
 from time import sleep
 
+import consul
 from selenium.common import NoSuchElementException
-from selenium.webdriver import Chrome, ActionChains
+from selenium.webdriver import ActionChains
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome import webdriver
 from selenium.webdriver.common.by import By
@@ -20,27 +21,13 @@ class XHSCrawler(BaseCrawler):
     cookies_path = "./cookies/xhs_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
-
+    consul_host = '8.138.58.80'
+    consul_port = 8500
     website = "xhs"
+    elements = {}
 
     url: str
     keyword: str
-
-    elements = {
-        "search_input": '//*[@id="global"]/div[1]/header/div[2]/input',
-        "notes_div": '//*[@id="global"]/div[2]/div[2]/div/div[4]',
-        "title": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/a/span',
-        "like_count": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/div/span/span[2]',
-        "author": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/div/div/a/span',
-        "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]',
-        "hottest": '/html/body/div[4]/div/li[3]',
-        "dropdown_container": '//*[@id="global"]/div[2]/div[2]/div/div[1]/div[2]/div',
-        "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]',
-        # //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]
-        "qrcode": '//*[@id="qrcode"]/img',
-        "login_btn": '//*[@id="login-btn"]/span',
-        "user_profile": '//*[@id="global"]/div[2]/div[1]/ul/li[4]/div/a'
-    }
 
     def __init__(self, url: str, keyword: str, pool: CookiePool, headless: bool = True):
         super().__init__(headless)
@@ -85,6 +72,7 @@ class XHSCrawler(BaseCrawler):
             self.cookie_pool.save_cookie(self.website, user_id, cookies)
 
     def do_login(self):
+        self._get_elements()
         temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
         while True:
@@ -108,7 +96,47 @@ class XHSCrawler(BaseCrawler):
         except NoSuchElementException as e:
             print("成功登录")
 
+    def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle):
+        notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
+        continue_flag = True
+        while continue_flag:
+            # 模拟滚轮向下
+            print(f'[Scroll Down] notes count: {len(res_dict)}')
+            self.driver.execute_script(f"window.scrollBy(0, 500);")
+            sleep(0.5)
+            notes = notes_div.find_elements(By.XPATH, "./section")
+            for note in notes:
+                try:
+                    like_count = note.find_element(By.XPATH, "./div/div/div/span/span[2]").text
+                    url = note.find_element(By.XPATH, "./div/a[1]").get_attribute("href")
+                    note_id = url.split("/")[-1]
+                    if like_count[-1] == "w":
+                        like_count = str(int(float(like_count[:-1]) * 10000))
+                    if int(like_count) > deadline:
+                        temp_note = {
+                            "url": url,
+                            "subtitle": subtitle.text if not subtitle is None else "",
+                            "like_count": like_count,
+                            "title": note.find_element(By.XPATH, "./div/div/a/span").text,
+                            "author": note.find_element(By.XPATH, "./div/div/div/a/span").text,
+                        }
+                        # subtitle非空时执行
+                        if not subtitle is None:
+                            # 如果笔记存在全局字典中，拼接subtitle
+                            if note_id in res_dict and res_dict[note_id]["subtitle"].split(',')[-1] != temp_note[
+                                "subtitle"]:
+                                temp_note["subtitle"] = res_dict[note_id]["subtitle"] + "," + temp_note["subtitle"]
+                            res_dict[note_id] = temp_note
+                        else:
+                            res_dict[note_id] = temp_note
+                    else:
+                        continue_flag = False
+                except Exception as e:
+                    print("爬取单篇笔记失败", e.args)
+                    continue
+
     def get_page_info(self) -> dict:
+        self._get_elements()
         res_dict = {}
         try:
             self.wait.until(EC.presence_of_element_located((By.XPATH, self.elements["search_input"])))
@@ -125,48 +153,19 @@ class XHSCrawler(BaseCrawler):
             print('[After Click Hot order] wait for 5s')
             sleep(5)
 
-            subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
-                                                                                                     "./button")
+            # 检测subtitle存在性，没有就直接跳
+            subtitles = []
+            try:
+                subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
+                                                                                                         "./button")
+            except NoSuchElementException as e:
+                self._get_all_notes(30, res_dict, None)
             for subtitle in subtitles:
                 try:
                     subtitle.click()
                     print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
                     sleep(5)
-                    notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
-                    continue_flag = True
-                    while continue_flag:
-                        # 模拟滚轮向下
-                        print(f'[Scroll Down] notes count: {len(res_dict)}')
-                        self.driver.execute_script(f"window.scrollBy(0, 300);")
-                        sleep(3)
-                        notes = notes_div.find_elements(By.XPATH, "./section")
-                        for note in notes:
-                            try:
-                                title = note.find_element(By.XPATH, "./div/div/a/span").text
-                                like_count = note.find_element(By.XPATH, "./div/div/div/span/span[2]").text
-                                author = note.find_element(By.XPATH, "./div/div/div/a/span").text
-                                url = note.find_element(By.XPATH, "./div/a[1]").get_attribute("href")
-                                note_id = url.split("/")[-1]
-                                if int(like_count) > 30:
-                                    temp_note = {
-                                        "title": title,
-                                        "like_count": like_count,
-                                        "author": author,
-                                        "url": url,
-                                        "subtitle": subtitle.text,
-                                    }
-                                    # 如果笔记存在全局字典中，拼接subtitle
-                                    if note_id in res_dict and res_dict[note_id]["subtitle"].split(',')[-1] != \
-                                            temp_note[
-                                                "subtitle"]:
-                                        temp_note["subtitle"] = res_dict[note_id]["subtitle"] + "," + temp_note[
-                                            "subtitle"]
-                                    res_dict[note_id] = temp_note
-                                else:
-                                    continue_flag = False
-                            except Exception as e:
-                                print("爬取单篇笔记失败", e.args)
-                                continue
+                    self._get_all_notes(30, res_dict, subtitle)
                 except Exception as e:
                     print("爬取单个subtitle失败")
                     print(e)
@@ -174,7 +173,7 @@ class XHSCrawler(BaseCrawler):
         except Exception as e:
             print("获取关键词信息失败")
             print(e)
-            self.driver.save_screenshot("./获取关键词信息.png")
+            self.driver.save_screenshot("./output/获取关键词信息.png")
             return res_dict
 
         return res_dict
@@ -190,9 +189,11 @@ class XHSCrawler(BaseCrawler):
             print("保存文件失败")
             print(e)
 
-# if __name__ == '__main__':
-#     xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "封开")
-#     # xhs_crawler.save_cookies_manually()
-#     xhs_crawler.do_login()
-#     temp = xhs_crawler.get_page_info()
-#     xhs_crawler.save_data(temp, xhs_crawler.keyword)
+    def _get_elements(self):
+        client = consul.Consul(host=self.consul_host, port=self.consul_port)
+        _, data = client.kv.get('schedule/elements')
+        self.elements = json.loads(data['Value'].decode('utf-8'))
+
+    def update_elements(self, elements: dict):
+        client = consul.Consul(host=self.consul_host, port=self.consul_port)
+        client.kv.put('schedule/elements', json.dumps(elements))
