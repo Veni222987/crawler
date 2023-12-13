@@ -3,7 +3,6 @@ import os.path
 import time
 from time import sleep
 
-import consul
 from selenium.common import NoSuchElementException
 from selenium.webdriver import ActionChains
 from selenium.webdriver import Keys
@@ -12,8 +11,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from config.config_loader import loader
 from core.base_crawler import BaseCrawler
 from core.cookie_pool import CookiePool
+from utils.email_util import EmailUtil
 
 
 class XHSCrawler(BaseCrawler):
@@ -21,8 +22,6 @@ class XHSCrawler(BaseCrawler):
     cookies_path = "./cookies/xhs_cookies.json"
     driver: webdriver.WebDriver
     wait: WebDriverWait
-    consul_host = '8.138.58.80'
-    consul_port = 8500
     website = "xhs"
     elements = {}
 
@@ -78,7 +77,8 @@ class XHSCrawler(BaseCrawler):
         while True:
             cookies = self.cookie_pool.get_rand_cookie(self.website)
             if len(cookies) == 0:
-                print("cookie池为空，等待获取")  # TODO 短信/邮件通知
+                print("cookie池为空，等待获取")  # 短信/邮件通知
+                EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
                 sleep(3)
                 continue
             else:
@@ -90,8 +90,10 @@ class XHSCrawler(BaseCrawler):
 
         # 尝试访问
         self.driver.get(temp_url)
+        sleep(1)
         try:
-            self.driver.find_element(By.XPATH, self.elements["qrcode"])
+            self.driver.find_element(By.XPATH, self.elements["login_btn"])
+            EmailUtil.send_email(['1948160779@qq.com'], 'cookie失效', '请维护cookie池')
             raise Exception("账号登录失败")
         except NoSuchElementException as e:
             print("成功登录")
@@ -190,10 +192,4 @@ class XHSCrawler(BaseCrawler):
             print(e)
 
     def _get_elements(self):
-        client = consul.Consul(host=self.consul_host, port=self.consul_port)
-        _, data = client.kv.get('schedule/elements')
-        self.elements = json.loads(data['Value'].decode('utf-8'))
-
-    def update_elements(self, elements: dict):
-        client = consul.Consul(host=self.consul_host, port=self.consul_port)
-        client.kv.put('schedule/elements', json.dumps(elements))
+        self.elements = loader.load_all().page_elements
