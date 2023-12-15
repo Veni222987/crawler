@@ -78,7 +78,7 @@ class XHSCrawler(BaseCrawler):
             cookies = self.cookie_pool.get_rand_cookie(self.website)
             if len(cookies) == 0:
                 print("cookie池为空，等待获取")  # 短信/邮件通知
-                EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
+                # EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
                 sleep(3)
                 continue
             else:
@@ -93,7 +93,7 @@ class XHSCrawler(BaseCrawler):
         sleep(1)
         try:
             self.driver.find_element(By.XPATH, self.elements["login_btn"])
-            EmailUtil.send_email(['1948160779@qq.com'], 'cookie失效', '请维护cookie池')
+            # EmailUtil.send_email(['1948160779@qq.com'], 'cookie失效', '请维护cookie池')
             raise Exception("账号登录失败")
         except NoSuchElementException as e:
             print("成功登录")
