@@ -163,15 +163,37 @@ class XHSCrawler(BaseCrawler):
             except NoSuchElementException as e:
                 self._get_all_notes(30, res_dict, None)
             for subtitle in subtitles:
-                try:
-                    subtitle.click()
-                    print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
-                    sleep(5)
-                    self._get_all_notes(30, res_dict, subtitle)
-                except Exception as e:
-                    print("爬取单个subtitle失败")
-                    print(e)
-                    continue
+                while True:
+                    try:
+                        subtitle.click()
+                        print("开始爬取子标题：", subtitle.text)
+                        sleep(1)
+                        self._get_all_notes(50, res_dict, subtitle)
+                        break
+                    except Exception as e:
+                        try:
+                            self.driver.find_element(By.XPATH, self.elements['subtitles_scroller']).click()
+                            print("[Click Subtitles Scroller]点击子标题滚动成功")
+                        except Exception as e:
+                            print("[Click Subtitles Scroller]点击子标题滚动失败")
+                            print(e)
+                # try:
+                #     while not subtitle.is_enabled():
+                #         try:
+                #             self.driver.find_element(By.XPATH, self.elements['subtitles_scroller']).click()
+                #             print("[Click Subtitles Scroller]点击子标题滚动成功")
+                #         except Exception as e:
+                #             print("[Click Subtitles Scroller]点击子标题滚动失败")
+                #             print(e)
+                #     subtitle.click()
+                #
+                #     print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
+                #     sleep(5)
+                #
+                # except Exception as e:
+                #     print("爬取单个subtitle失败")
+                #     print(e)
+                #     continue
         except Exception as e:
             print("获取关键词信息失败")
             print(e)
