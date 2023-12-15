@@ -5,5 +5,5 @@ deploy:
 	make clear
 	git checkout deploy
 	git merge main
-	git push deploy deploy
+	git push origin deploy
 	git checkout main
