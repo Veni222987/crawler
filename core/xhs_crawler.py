@@ -122,6 +122,8 @@ class XHSCrawler(BaseCrawler):
                             "title": note.find_element(By.XPATH, "./div/div/a/span").text,
                             "author": note.find_element(By.XPATH, "./div/div/div/a/span").text,
                         }
+
+
                         # subtitle非空时执行
                         if not subtitle is None:
                             # 如果笔记存在全局字典中，拼接subtitle
