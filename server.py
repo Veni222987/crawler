@@ -41,7 +41,10 @@ def check_and_return_json(file_path):
 @app.route("/progress", methods=["GET"])
 def get_search_progress():
     task_id = request.args.get("task_id")
-    task = client.get_task(task_id)
+    try:
+        task = client.get_task(task_id)
+    except RuntimeError as e:
+        return {"code": -1, "msg": "任务不存在"}
 
     count = XHSCrawler.parse_progress(text=task.stage)
     return {
