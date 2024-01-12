@@ -188,7 +188,7 @@ class XHSCrawler(BaseCrawler):
         op.set_stage(got)
 
     @staticmethod
-    def parse_progress(self, text: str) -> int:
+    def parse_progress(text: str) -> int:
         if text == "":
             return 0
         return int(text.split("=")[-1])

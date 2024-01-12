@@ -43,7 +43,7 @@ def get_search_progress():
     task_id = request.args.get("task_id")
     task = client.get_task(task_id)
 
-    count = XHSCrawler.parse_progress(task.stage)
+    count = XHSCrawler.parse_progress(text=task.stage)
     return {
         "finished": task.status >= TaskStatus.FINAL,
         "count": count,
