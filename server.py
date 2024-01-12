@@ -6,9 +6,10 @@ import threading
 
 from async_schedule.client import TaskRpcClient
 from async_schedule.dispatcher import TaskDispatcher
-from async_schedule.domain import Task
+from async_schedule.domain import Task, TaskStatus
 from flask import Flask, request, Response
 
+from core.xhs_crawler import XHSCrawler
 from worker.xhs_worker import XHSWorker, XHSWorkerContext
 
 app = Flask("xhs_crawler")
@@ -21,8 +22,9 @@ def search_brand():
     keyword = data["keyword"]
     ctx_str = json.dumps(XHSWorkerContext(type="search_xhs",
                                           keyword=keyword).__dict__)
-    client.submit_task(Task(task_type="search_xhs", context=ctx_str))
-    return {"code": 0, "msg": "success", "data": None}
+    task = Task(task_type="search_xhs", context=ctx_str)
+    client.submit_task(task)
+    return {"code": 0, "msg": "success", "data": task.task_id}
 
 
 def check_and_return_json(file_path):
@@ -34,6 +36,18 @@ def check_and_return_json(file_path):
     else:
         # 文件不存在，返回空
         return None
+
+
+@app.route("/progress", methods=["GET"])
+def get_search_progress():
+    task_id = request.args.get("task_id")
+    task = client.get_task(task_id)
+
+    count = XHSCrawler.parse_progress(task.stage)
+    return {
+        "finished": task.status >= TaskStatus.FINAL,
+        "count": count,
+    }
 
 
 @app.route("/result", methods=["GET"])
