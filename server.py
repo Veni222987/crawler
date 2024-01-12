@@ -73,9 +73,6 @@ if __name__ == '__main__':
     # 任务管理server
     client = TaskRpcClient("https://async-scheduler.bv5a7f4ddoqnm.ap-southeast-1.cs.amazonlightsail.com")
 
-    # 提交任务，一般在前端使用，这里仅作测试（context传入TestWorkerContext结构序列化后的JSON字符串）
-    # task_client.submit_task(Task(task_type="test", context=ctx_str))
-
     # 初始化任务分发器
     dispatcher = TaskDispatcher(client, redis_host="43.139.80.71",
                                 redis_port=6378, db=3, redis_pass="dsfkjojo432rn5")
