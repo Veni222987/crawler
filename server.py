@@ -1,7 +1,3 @@
-import csv
-import io
-import json
-import os
 import threading
 
 import consul
@@ -9,16 +5,14 @@ import consul
 import pymysql
 from async_schedule.client import TaskRpcClient
 from async_schedule.dispatcher import TaskDispatcher
-# from async_schedule.domain import Task, TaskStatus
-from flask import Flask, request, Response
+from flask import Flask
 from flask_injector import FlaskInjector
 from injector import inject
 from app.controller.k_task_interface import main_bp
 from app.services.k_task_service import KTaskService, KTaskServiceImpl
 from config.config_loader import loader
-# from core.xhs_crawler import XHSCrawler
 from app.model.k_task import db
-from worker.xhs_worker import XHSWorker, XHSWorkerContext
+from worker.xhs_worker import XHSWorker
 from utils.ini2json import mysql_section_to_json_string
 
 app = Flask("xhs_crawler")
@@ -67,78 +61,6 @@ def initialize_app():
 def configure(binder, db, app):
     # 绑定 KTaskService 到工厂函数
     binder.bind(interface=KTaskService, to=KTaskServiceImpl(db=db, app=app))
-
-
-# @app.route("/search", methods=["POST"])
-# def search_brand():
-#     data = request.json
-#     keyword = data["keyword"]
-#     filter = data.get("filter", None)
-#     platform = data.get("platform", "小红书")
-#     _type = KTaskService.select_platform(platform)
-#
-#     try:
-#         # 根据json查看任务是否已经存在，若存在，则返回
-#         json_result = check_and_return_json("./output/" + keyword + ".json")
-#         if json_result is not None:
-#             task = client.get_task("")
-#             count = XHSCrawler.parse_progress(text=task.stage)
-#             return {"code": 1, "msg": "任务已经部署", "task_id": "", "count": count}
-#
-#         ctx_str = json.dumps(XHSWorkerContext(type=_type,
-#                                               keyword=keyword).__dict__)
-#         task = Task(task_type="search_xhs", context=ctx_str)
-#         client.submit_task(task)
-#
-#
-#     except RuntimeError as e:
-#         return {"code": -1, "msg": "任务部署失败, 原因:" + str(e), "task+id": "", "count": 0}
-#     return {"code": 0, "msg": "任务部署成功", "task_id": task.task_id, "count": 0}
-
-
-# def check_and_return_json(file_path):
-#     # 检查文件是否存在
-#     if os.path.exists(file_path):
-#         # 读取并返回文件内容
-#         with open(file_path, 'r') as file:
-#             return json.load(file)
-#     else:
-#         # 文件不存在，返回空
-#         return None
-
-
-# @app.route("/progress", methods=["GET"])
-# def get_search_progress():
-#     task_id = request.args.get("task_id")
-#     try:
-#         task = client.get_task(task_id)
-#     except RuntimeError as e:
-#         return {"code": -1, "msg": "任务不存在"}
-#
-#     count = XHSCrawler.parse_progress(text=task.stage)
-#     return {
-#         "finished": task.status >= TaskStatus.FINAL,
-#         "count": count,
-#     }
-
-
-# @app.route("/result", methods=["GET"])
-# def get_search_result():
-#     keyword = request.args.get("keyword")
-#     # 判断./output/keyword.json是否存在，若存在则返回，否则返回空
-#     json_result = check_and_return_json("./output/" + keyword + ".json")
-#     if json_result:
-#         json_result = list(json_result.values())
-#         # 使用 StringIO 作为文件对象
-#         si = io.StringIO()
-#         cw = csv.DictWriter(si, fieldnames=json_result[0].keys())
-#         cw.writeheader()
-#         cw.writerows(json_result)
-#         # 设置 Response 对象
-#         output = Response(si.getvalue(), mimetype='text/csv')
-#         output.headers["Content-Disposition"] = "attachment; filename=data.csv"
-#         return output
-#     return {"code": -1, "msg": "任务未完成"}
 
 
 if __name__ == '__main__':
