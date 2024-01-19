@@ -10,8 +10,8 @@ from flask import Blueprint, request, Response, current_app
 from core.xhs_crawler import XHSCrawler
 from worker.xhs_worker import XHSWorkerContext
 from app.services.k_task_service import KTaskService
-main_bp = Blueprint('main', __name__)
 
+main_bp = Blueprint('main', __name__)
 
 
 def check_and_return_json(file_path):
@@ -55,39 +55,50 @@ def search_brand(k_task_service: KTaskService):
     return {"code": 0, "msg": "任务部署成功", "task_id": task.task_id, "count": 0}
 
 
+@inject
 @main_bp.route("/result", methods=["GET"])
-def get_search_result():
+def get_search_result(k_task_service: KTaskService):
     keyword = request.args.get("keyword")
-    # 判断./output/keyword.json是否存在，若存在则返回，否则返回空
-    json_result = check_and_return_json("./output/" + keyword + ".json")
-    if json_result:
-        json_result = list(json_result.values())
-        # 使用 StringIO 作为文件对象
-        si = io.StringIO()
-        cw = csv.DictWriter(si, fieldnames=json_result[0].keys())
-        cw.writeheader()
-        cw.writerows(json_result)
-        # 设置 Response 对象
-        output = Response(si.getvalue(), mimetype='text/csv')
-        output.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    # 根据数据库中是否已经有keyword，若有则记录
+    k_task = k_task_service.get_one_by_keyword(keyword)
+    client = current_app.config['CLIENT']
+    if k_task is not None:
+        task_id = k_task.task_id
+        task = client.get_task(task_id)
+        if task.status < TaskStatus.FINAL:
+            count = XHSCrawler.parse_progress(text=task.stage)
+            return {"code": 1, "task_id": task_id, "count": count, "msg": "任务未完成"}
+        output = get_csv_by_keyword(keyword)
         return output
-    return {"code": -1, "msg": "任务未完成"}
+    return {"code": -1, "msg": "任务不存在", "task_id": "", "count": 0}
 
 
+@inject
 @main_bp.route("/progress", methods=["GET"])
-def get_search_progress():
+def get_search_progress(k_task_service: KTaskService):
     client = current_app.config['CLIENT']
     task_id = request.args.get("task_id")
-    try:
+    k_task = k_task_service.get_one_by_task_id(task_id)
+    if k_task is not None:
+        keyword = k_task.keyword
         task = client.get_task(task_id)
-    except RuntimeError as e:
-        return {"code": -1, "msg": "任务不存在"}
-
-    count = XHSCrawler.parse_progress(text=task.stage)
-    return {
-        "finished": task.status >= TaskStatus.FINAL,
-        "count": count,
-    }
+        count = XHSCrawler.parse_progress(text=task.stage)
+        if task.status < TaskStatus.FINAL:
+            return {"code": 1, "count": count, "task_id": task_id, "msg": "任务未完成"}
+        output = get_csv_by_keyword(keyword)
+        return output
+    return {"code": -1, "msg": "任务不存在", "task_id": "", "count": 0}
 
 
-
+def get_csv_by_keyword(keyword):
+    json_result = check_and_return_json("./output/" + keyword + ".json")
+    json_result = list(json_result.values())
+    # 使用 StringIO 作为文件对象
+    si = io.StringIO()
+    cw = csv.DictWriter(si, fieldnames=json_result[0].keys())
+    cw.writeheader()
+    cw.writerows(json_result)
+    # 设置 Response 对象
+    output = Response(si.getvalue(), mimetype='text/csv')
+    output.headers["Content-Disposition"] = "attachment; filename=data.csv"
+    return output
