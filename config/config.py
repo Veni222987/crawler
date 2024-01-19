@@ -1,4 +1,8 @@
 import dataclasses
+import configparser
+
+_config = configparser.ConfigParser()
+_config.read('config.ini')
 
 
 @dataclasses.dataclass
@@ -24,11 +28,27 @@ class MailConfig:
 
 
 @dataclasses.dataclass
+class MySQLConfig:
+    host = ""
+    port = 80
+    username = ""
+    password = ""
+    database = ""
+
+    def __init__(self, host, port, username, password, database):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.database = database
+
+
+@dataclasses.dataclass
 class Config:
     task_rpc_endpoint = ""
     task_dispatcher_redis: RedisConfig = None
     cookie_pool_redis: RedisConfig = None
     mail_config: MailConfig = None
     page_elements: dict = None
-
+    mysql_config: MySQLConfig = None
     server_port = 0
