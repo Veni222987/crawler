@@ -101,9 +101,12 @@ class XHSCrawler(BaseCrawler):
     def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle):
         notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
         continue_flag = True
+        counter=0
+
         while continue_flag:
             # 模拟滚轮向下
             print(f'[Scroll Down] notes count: {len(res_dict)}')
+            previous_len = len(res_dict)
             self.driver.execute_script(f"window.scrollBy(0, 500);")
             sleep(0.5)
             notes = notes_div.find_elements(By.XPATH, "./section")
@@ -114,7 +117,7 @@ class XHSCrawler(BaseCrawler):
                     note_id = url.split("/")[-1]
                     if like_count[-1] == "w":
                         like_count = str(int(float(like_count[:-1]) * 10000))
-                    if int(like_count) > deadline:
+                    if int(like_count) > deadline and counter < 10:
                         temp_note = {
                             "url": url,
                             "subtitle": subtitle.text if not subtitle is None else "",
@@ -133,9 +136,15 @@ class XHSCrawler(BaseCrawler):
                             res_dict[note_id] = temp_note
                     else:
                         continue_flag = False
+                        counter = 0
                 except Exception as e:
                     print("爬取单篇笔记失败", e.args)
                     continue
+
+            if len(res_dict) == previous_len:
+                counter = counter + 1
+            else:
+                counter = 0
 
     def get_page_info(self) -> dict:
         self._get_elements()
@@ -167,7 +176,7 @@ class XHSCrawler(BaseCrawler):
                     try:
                         subtitle.click()
                         print("开始爬取子标题：", subtitle.text)
-                        sleep(1)
+                        sleep(5)
                         self._get_all_notes(50, res_dict, subtitle)
                         break
                     except Exception as e:
