@@ -18,7 +18,7 @@ def check_and_return_json(file_path):
     # 检查文件是否存在
     if os.path.exists(file_path):
         # 读取并返回文件内容
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             return json.load(file)
     else:
         # 文件不存在，返回空
