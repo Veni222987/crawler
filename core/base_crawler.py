@@ -30,3 +30,5 @@ class BaseCrawler:
         })
 
         self.wait = WebDriverWait(self.driver, 30)
+
+        self.driver.maximize_window()

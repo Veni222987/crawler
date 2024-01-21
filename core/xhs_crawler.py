@@ -102,10 +102,12 @@ class XHSCrawler(BaseCrawler):
     def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle, op: TaskOperator):
         notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
         continue_flag = True
+        counter=0
+
         while continue_flag:
             # 模拟滚轮向下
             print(f'[Scroll Down] notes count: {len(res_dict)}')
-            self.save_progress(op, len(res_dict))
+            previous_len = len(res_dict)
             self.driver.execute_script(f"window.scrollBy(0, 500);")
             sleep(0.5)
             notes = notes_div.find_elements(By.XPATH, "./section")
@@ -116,7 +118,7 @@ class XHSCrawler(BaseCrawler):
                     note_id = url.split("/")[-1]
                     if like_count[-1] == "w":
                         like_count = str(int(float(like_count[:-1]) * 10000))
-                    if int(like_count) > deadline:
+                    if int(like_count) > deadline and counter < 10:
                         temp_note = {
                             "url": url,
                             "subtitle": subtitle.text if not subtitle is None else "",
@@ -136,11 +138,17 @@ class XHSCrawler(BaseCrawler):
                             res_dict[note_id] = temp_note
                     else:
                         continue_flag = False
+                        counter = 0
                 except Exception as e:
                     print("爬取单篇笔记失败", e.args)
                     continue
 
-    def get_page_info(self, op: TaskOperator) -> dict:
+            if len(res_dict) == previous_len:
+                counter = counter + 1
+            else:
+                counter = 0
+
+    def get_page_info(self) -> dict:
         self._get_elements()
         res_dict = {}
         try:
@@ -166,15 +174,37 @@ class XHSCrawler(BaseCrawler):
             except NoSuchElementException as e:
                 self._get_all_notes(30, res_dict, None, op)
             for subtitle in subtitles:
-                try:
-                    subtitle.click()
-                    print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
-                    sleep(5)
-                    self._get_all_notes(30, res_dict, subtitle, op)
-                except Exception as e:
-                    print("爬取单个subtitle失败")
-                    print(e)
-                    continue
+                while True:
+                    try:
+                        subtitle.click()
+                        print("开始爬取子标题：", subtitle.text)
+                        sleep(5)
+                        self._get_all_notes(50, res_dict, subtitle)
+                        break
+                    except Exception as e:
+                        try:
+                            self.driver.find_element(By.XPATH, self.elements['subtitles_scroller']).click()
+                            print("[Click Subtitles Scroller]点击子标题滚动成功")
+                        except Exception as e:
+                            print("[Click Subtitles Scroller]点击子标题滚动失败")
+                            print(e)
+                # try:
+                #     while not subtitle.is_enabled():
+                #         try:
+                #             self.driver.find_element(By.XPATH, self.elements['subtitles_scroller']).click()
+                #             print("[Click Subtitles Scroller]点击子标题滚动成功")
+                #         except Exception as e:
+                #             print("[Click Subtitles Scroller]点击子标题滚动失败")
+                #             print(e)
+                #     subtitle.click()
+                #
+                #     print(f'[After Click Subtitle] {subtitle.text}, wait for 5s')
+                #     sleep(5)
+                #
+                # except Exception as e:
+                #     print("爬取单个subtitle失败")
+                #     print(e)
+                #     continue
         except Exception as e:
             print("获取关键词信息失败")
             print(e)
