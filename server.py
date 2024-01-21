@@ -35,6 +35,7 @@ def initialize_app():
     # 创建数据库
     with connection.cursor() as cursor:
         cursor.execute('CREATE DATABASE IF NOT EXISTS xhs_crawler')
+        print("创建数据库成功")
 
     # 关闭连接
     connection.close()
