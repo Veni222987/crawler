@@ -2,7 +2,7 @@ import json
 
 import consul
 
-from config.config import Config, MailConfig
+from config.config import Config, MailConfig, MySQLConfig
 
 
 class ConsulClassLoader:
@@ -25,6 +25,11 @@ class ConsulClassLoader:
         m_conf = json.loads(self.load("mail_config"))
         conf.mail_config = MailConfig(m_conf["smtp_server"], m_conf["smtp_port"], m_conf["smtp_username"],
                                       m_conf["smtp_password"])
+        # 从consul中获取MySQL配置， 然后初始化MySQLConfig对象
+        mysql_conf = json.loads(self.load("mysql_config"))
+        conf.mysql_config = MySQLConfig(mysql_conf["host"], mysql_conf["port"], mysql_conf["username"],
+                                        mysql_conf["password"], mysql_conf["database"])
+
         return conf
 
 

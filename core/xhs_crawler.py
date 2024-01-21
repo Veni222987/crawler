@@ -3,6 +3,7 @@ import os.path
 import time
 from time import sleep
 
+from async_schedule.op import TaskOperator
 from selenium.common import NoSuchElementException
 from selenium.webdriver import ActionChains
 from selenium.webdriver import Keys
@@ -78,7 +79,7 @@ class XHSCrawler(BaseCrawler):
             cookies = self.cookie_pool.get_rand_cookie(self.website)
             if len(cookies) == 0:
                 print("cookie池为空，等待获取")  # 短信/邮件通知
-                EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
+                # EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
                 sleep(3)
                 continue
             else:
@@ -93,12 +94,12 @@ class XHSCrawler(BaseCrawler):
         sleep(1)
         try:
             self.driver.find_element(By.XPATH, self.elements["login_btn"])
-            EmailUtil.send_email(['1948160779@qq.com'], 'cookie失效', '请维护cookie池')
+            # EmailUtil.send_email(['1948160779@qq.com'], 'cookie失效', '请维护cookie池')
             raise Exception("账号登录失败")
         except NoSuchElementException as e:
             print("成功登录")
 
-    def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle):
+    def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle, op: TaskOperator):
         notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
         continue_flag = True
         counter=0
@@ -125,6 +126,7 @@ class XHSCrawler(BaseCrawler):
                             "title": note.find_element(By.XPATH, "./div/div/a/span").text,
                             "author": note.find_element(By.XPATH, "./div/div/div/a/span").text,
                         }
+
                         # subtitle非空时执行
                         if not subtitle is None:
                             # 如果笔记存在全局字典中，拼接subtitle
@@ -170,7 +172,7 @@ class XHSCrawler(BaseCrawler):
                 subtitles = self.driver.find_element(By.XPATH, self.elements["subtitles"]).find_elements(By.XPATH,
                                                                                                          "./button")
             except NoSuchElementException as e:
-                self._get_all_notes(30, res_dict, None)
+                self._get_all_notes(30, res_dict, None, op)
             for subtitle in subtitles:
                 while True:
                     try:
@@ -210,6 +212,16 @@ class XHSCrawler(BaseCrawler):
             return res_dict
 
         return res_dict
+
+    def save_progress(self, op: TaskOperator, hasGot: int):
+        got = f"got={hasGot}"
+        op.set_stage(got)
+
+    @staticmethod
+    def parse_progress(text: str) -> int:
+        if text == "":
+            return 0
+        return int(text.split("=")[-1])
 
     def save_data(self, data: dict, keyword: str):
         try:

@@ -5,3 +5,5 @@
 *.exe
 
 output
+
+venv

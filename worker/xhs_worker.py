@@ -25,7 +25,7 @@ class XHSWorker(AbstractWorker[XHSWorkerContext]):
                                  pool=CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
                                  headless=self.headless)
         xhs_crawler.do_login()
-        data = xhs_crawler.get_page_info()
+        data = xhs_crawler.get_page_info(op)
         xhs_crawler.save_data(data, task_context.keyword)
 
     def get_task_context_type(self) -> Type[XHSWorkerContext]:
