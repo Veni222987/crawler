@@ -147,8 +147,9 @@ class XHSCrawler(BaseCrawler):
                 counter = counter + 1
             else:
                 counter = 0
+            self.save_progress(op, counter)
 
-    def get_page_info(self) -> dict:
+    def get_page_info(self, op: TaskOperator) -> dict:
         self._get_elements()
         res_dict = {}
         try:
