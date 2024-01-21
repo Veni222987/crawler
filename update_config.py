@@ -14,15 +14,19 @@ elements = {
     "url": '//*[@id="global"]/div[2]/div[2]/div/div[4]/section[1]/div/a[1]',
     "hottest": '/html/body/div[4]/div/li[3]',
     "dropdown_container": '//*[@id="global"]/div[2]/div[2]/div/div[1]/div[2]/div',
-    "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[last()-2]/div/div/div[2]',
+    "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[last()-2]',
     # 有品牌有子标题 //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]
     # 无品牌有子标题 //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]
+    #//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]/button[1]
+    #//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div/button[1]
+
     "qrcode": '//*[@id="qrcode"]/img',
     "login_btn": '//*[@id="login-btn"]/span',
     "user_profile": '//*[@id="global"]/div[2]/div[1]/ul/li[4]/div/a',
     'subtitles_scroller': '//*[@id="global"]/div[2]/div[2]/div/div[last()-2]/div/div/div[1]/div'
     # 有品牌有子标题   //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[1]/div
     # 无品牌有子标题   //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[1]/div
+
 }
 
 mail_config = {
