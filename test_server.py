@@ -1,11 +1,15 @@
 from unittest import TestCase
 
 import consul
+from async_schedule.op import TaskOperator
 from flask import Flask
 
+from app.controller.k_task_interface import check_and_return_json
 from config.config_loader import loader
 from app.model.k_task import db, KTask
-from server import check_and_return_json
+from core.cookie_pool import CookiePool
+from core.xhs_crawler import XHSCrawler
+# from server import check_and_return_json
 
 from utils.snowflake import next_id
 
@@ -74,3 +78,13 @@ class Test(TestCase):
 
             task = KTask.query.filter_by(keyword='hhh').first()
             print(task.id)
+
+
+    def testCrawler(self):
+        xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "IRY",
+                                 pool=CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
+                                 headless=False)
+        xhs_crawler.do_login()
+        taskOperator = TaskOperator
+        dict = xhs_crawler.get_page_info(taskOperator)
+        xhs_crawler.save_data(dict, "IRY")
