@@ -180,7 +180,7 @@ class XHSCrawler(BaseCrawler):
                         subtitle.click()
                         print("开始爬取子标题：", subtitle.text)
                         sleep(5)
-                        self._get_all_notes(50, res_dict, subtitle)
+                        self._get_all_notes(50, res_dict, subtitle, op)
                         break
                     except Exception as e:
                         try:
