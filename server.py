@@ -34,7 +34,7 @@ def initialize_app():
 
     # 创建数据库
     with connection.cursor() as cursor:
-        cursor.execute('CREATE DATABASE IF NOT EXISTS xhs_crawler')
+        cursor.execute('CREATE DATABASE IF NOT EXISTS xhs_crawler CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci')
 
     # 关闭连接
     connection.close()

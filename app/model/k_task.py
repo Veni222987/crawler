@@ -5,9 +5,9 @@ db = SQLAlchemy()
 
 
 class KTask(db.Model):
-    id = db.Column(db.String(255), primary_key=True)
-    keyword = db.Column(db.String(255), nullable=False)
-    task_id = db.Column(db.String(255), nullable=False)
+    id = db.Column(db.String(191), primary_key=True)
+    keyword = db.Column(db.String(191), nullable=False)
+    task_id = db.Column(db.String(191), nullable=False)
 
     def __init__(self, keyword, task_id):
         self.id = str(next_id())
