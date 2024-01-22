@@ -34,6 +34,7 @@ class XHSCrawler(BaseCrawler):
         self.url = url
         self.keyword = keyword
         self.cookie_pool = pool
+        self._get_elements()
         print('[Driver] init success')
 
     def check_login(self):
@@ -45,7 +46,6 @@ class XHSCrawler(BaseCrawler):
             return True
 
     def obtain_cookie(self):
-        temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
 
         try:
@@ -72,7 +72,6 @@ class XHSCrawler(BaseCrawler):
             self.cookie_pool.save_cookie(self.website, user_id, cookies)
 
     def do_login(self):
-        self._get_elements()
         temp_url = "https://www.xiaohongshu.com/explore/6562b9ce000000003200ac22"
         self.driver.get(self.url)
         while True:
@@ -150,7 +149,6 @@ class XHSCrawler(BaseCrawler):
             # self.save_progress(op, counter)
 
     def get_page_info(self, op: TaskOperator) -> dict:
-        self._get_elements()
         res_dict = {}
         try:
             self.wait.until(EC.presence_of_element_located((By.XPATH, self.elements["search_input"])))

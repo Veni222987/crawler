@@ -1,6 +1,7 @@
 import json
-
 import consul
+from core.cookie_pool import CookiePool
+from core.xhs_crawler import XHSCrawler
 
 elements = {
     "search_input": '//*[@id="global"]/div[1]/header/div[2]/input',
@@ -40,3 +41,9 @@ mail_config = {
 client = consul.Consul(host='8.138.58.80', port=8500)
 client.kv.put('xhs_crawler/elements', json.dumps(elements))
 client.kv.put('xhs_crawler/mail_config', json.dumps(mail_config))
+
+
+xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "LEGO",
+                         pool=CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
+                         headless=False)
+xhs_crawler.obtain_cookie()
