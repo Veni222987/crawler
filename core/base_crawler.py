@@ -3,7 +3,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Chrome, ActionChains
 from selenium.webdriver.support.wait import WebDriverWait
 
-
 class BaseCrawler:
     driver: webdriver.WebDriver
 
@@ -33,3 +32,4 @@ class BaseCrawler:
 
         # self.driver.maximize_window()
         self.driver.set_window_size(1920, 1080)
+

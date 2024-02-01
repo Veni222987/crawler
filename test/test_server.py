@@ -28,7 +28,7 @@ class Test(TestCase):
             print("Generated Snowflake ID:", generated_id)
 
     def test_ini2json(self):
-        ini_file_path = 'config.ini'
+        ini_file_path = '../config.ini'
         json_string = mysql_section_to_json_string(ini_file_path)
 
         print(json_string)
@@ -40,7 +40,7 @@ class Test(TestCase):
         print(mysql_config.host)
 
     def test_sql(self):
-        ini_file_path = 'config.ini'
+        ini_file_path = '../config.ini'
         json_string = mysql_section_to_json_string(ini_file_path)
 
         client = consul.Consul(host='8.138.58.80', port=8500)
