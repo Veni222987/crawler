@@ -3,7 +3,8 @@ import consul
 from core.cookie_pool import CookiePool
 from core.xhs_crawler import XHSCrawler
 
-elements = {
+# 小红薯=========================================================
+xhs_elements = {
     "search_input": '//*[@id="global"]/div[1]/header/div[2]/input',
     "notes_div": '//*[@id="global"]/div[2]/div[2]/div/div[last()-1]',
     # 有品牌有子标题，WIS             '//*[@id="global"]/div[2]/div[2]/div/div[5]'
@@ -18,8 +19,8 @@ elements = {
     "subtitles": '//*[@id="global"]/div[2]/div[2]/div/div[last()-2]',
     # 有品牌有子标题 //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[2]
     # 无品牌有子标题 //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]
-    #//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]/button[1]
-    #//*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div/button[1]
+    # //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[2]/button[1]
+    # //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div/button[1]
 
     "qrcode": '//*[@id="qrcode"]/img',
     "login_btn": '//*[@id="login-btn"]/span',
@@ -27,6 +28,18 @@ elements = {
     'subtitles_scroller': '//*[@id="global"]/div[2]/div[2]/div/div[last()-2]/div/div/div[1]/div'
     # 有品牌有子标题   //*[@id="global"]/div[2]/div[2]/div/div[4]/div/div/div[1]/div
     # 无品牌有子标题   //*[@id="global"]/div[2]/div[2]/div/div[3]/div/div/div[1]/div
+}
+
+# 抖音============================================================
+dy_elements = {
+    'search_input': '//*[@id="global"]',
+    'qrcode': '//*[@id="web-login-container"]/article/article/article/div[2]/div/div[1]/img',
+    'mine': '//*[@id="douyin-header"]/div[1]/header/div/div/div[2]/div/div/div[5]/div/a/div',
+    'user_id': '//*[@id="douyin-right-container"]/div[2]/div/div/div[2]/div[2]/div[1]/h1/span/span/span/span/span/span',
+
+}
+# B站============================================================
+bilibili_elements = {
 
 }
 
@@ -39,11 +52,8 @@ mail_config = {
 
 # 更新consul配置
 client = consul.Consul(host='8.138.58.80', port=8500)
-client.kv.put('xhs_crawler/elements', json.dumps(elements))
+client.kv.put('xhs_crawler/xhs_elements', json.dumps(xhs_elements))
+client.kv.put('xhs_crawler/dy_elements', json.dumps(dy_elements))
+client.kv.put('xhs_crawler/bilibili_elements', json.dumps(bilibili_elements))
 client.kv.put('xhs_crawler/mail_config', json.dumps(mail_config))
 
-
-xhs_crawler = XHSCrawler("https://www.xiaohongshu.com/explore", "LEGO",
-                         pool=CookiePool(host="43.139.80.71", port=6378, db=3, password="dsfkjojo432rn5"),
-                         headless=False)
-xhs_crawler.obtain_cookie()

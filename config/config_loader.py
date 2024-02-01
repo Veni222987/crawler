@@ -18,10 +18,10 @@ class ConsulClassLoader:
             return data["Value"].decode()
         return None
 
-    def load_all(self) -> Config:
+    def load_all(self,website) -> Config:
         conf = Config()
         # 从consul中获取配置 key
-        conf.page_elements = json.loads(self.load("elements"))
+        conf.page_elements = json.loads(self.load(f"{website}_elements"))
         m_conf = json.loads(self.load("mail_config"))
         conf.mail_config = MailConfig(m_conf["smtp_server"], m_conf["smtp_port"], m_conf["smtp_username"],
                                       m_conf["smtp_password"])

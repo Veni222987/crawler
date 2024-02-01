@@ -78,6 +78,7 @@ class XHSCrawler(BaseCrawler):
             cookies = self.cookie_pool.get_rand_cookie(self.website)
             if len(cookies) == 0:
                 print("cookie池为空，等待获取")  # 短信/邮件通知
+                # [TODO] 发送邮件通知管理员
                 # EmailUtil.send_email(['1948160779@qq.com'], 'cookie池为空', '请维护cookie池')
                 sleep(3)
                 continue
@@ -235,4 +236,4 @@ class XHSCrawler(BaseCrawler):
             print(e)
 
     def _get_elements(self):
-        self.elements = loader.load_all().page_elements
+        self.elements = loader.load_all(self.website).page_elements
