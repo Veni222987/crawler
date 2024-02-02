@@ -32,10 +32,16 @@ xhs_elements = {
 
 # 抖音============================================================
 dy_elements = {
-    'search_input': '//*[@id="global"]',
+    'search_input': '//*[@id="douyin-header"]/div[1]/header/div/div/div[1]/div/div[2]/div/div/input',
     'qrcode': '//*[@id="web-login-container"]/article/article/article/div[2]/div/div[1]/img',
     'mine': '//*[@id="douyin-header"]/div[1]/header/div/div/div[2]/div/div/div[5]/div/a/div',
     'user_id': '//*[@id="douyin-right-container"]/div[2]/div/div/div[2]/div[2]/div[1]/h1/span/span/span/span/span/span',
+    'video_btn': '//*[@id="search-content-area"]/div/div[1]/div[1]/div[2]/span[2]',
+    'drop_down': '//*[@id="search-content-area"]/div/div[1]/div[1]/div/div/span',
+    'hottest': '',
+    'subtitles_bar': '//*[@id="search-content-area"]/div/div[1]/div[3]/div/div[1]',
+    'subtitles_scroller': '//*[@id="search-content-area"]/div/div[1]/div[3]/div/div[4]/svg[2]/circle',
+    'notes_div': '//*[@id="search-content-area"]/div/div[3]/div[2]/ul'
 
 }
 # B站============================================================
@@ -56,4 +62,3 @@ client.kv.put('xhs_crawler/xhs_elements', json.dumps(xhs_elements))
 client.kv.put('xhs_crawler/dy_elements', json.dumps(dy_elements))
 client.kv.put('xhs_crawler/bilibili_elements', json.dumps(bilibili_elements))
 client.kv.put('xhs_crawler/mail_config', json.dumps(mail_config))
-

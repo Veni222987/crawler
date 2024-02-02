@@ -99,7 +99,7 @@ class XHSCrawler(BaseCrawler):
         except NoSuchElementException as e:
             print("成功登录")
 
-    def _get_all_notes(self, deadline: 30, res_dict: dict, subtitle, op: TaskOperator):
+    def _get_subtitle_notes(self, deadline: 30, res_dict: dict, subtitle, op: TaskOperator):
         notes_div = self.driver.find_element(By.XPATH, self.elements["notes_div"])
         continue_flag = True
         counter = 0
@@ -171,16 +171,16 @@ class XHSCrawler(BaseCrawler):
             try:
                 # 等待页面加载完成
                 subtitles_bar = self.driver.find_element(By.XPATH, self.elements["subtitles"])
-                subtitles = subtitles_bar.find_elements(By.XPATH,".//button")
+                subtitles = subtitles_bar.find_elements(By.XPATH, ".//button")
             except NoSuchElementException as e:
-                self._get_all_notes(0, res_dict, None, op)
+                self._get_subtitle_notes(0, res_dict, None, op)
             for subtitle in subtitles:
                 while True:
                     try:
                         subtitle.click()
                         print("开始爬取子标题：", subtitle.text)
                         sleep(5)
-                        self._get_all_notes(50, res_dict, subtitle, op)
+                        self._get_subtitle_notes(50, res_dict, subtitle, op)
                         break
                     except Exception as e:
                         try:
